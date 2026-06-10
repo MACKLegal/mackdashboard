@@ -756,9 +756,11 @@ function getBadgeClass(type) {
 
 function renderDashboard(records) {
   // Filter client-side to active stages
+  // Stage is a singleSelect — value may be a string or object with .name
   const ACTIVE_STAGE_VALUES = ['New', 'Attempting'];
   const activeJobs = records.filter(r => {
-    const stage = r.fields[FIELDS.stage] || '';
+    const raw = r.fields[FIELDS.stage];
+    const stage = (raw && typeof raw === 'object') ? raw.name : (raw || '');
     return ACTIVE_STAGE_VALUES.includes(stage);
   });
 
@@ -848,7 +850,7 @@ function renderDashboard(records) {
       const serviceType = f[FIELDS.serviceType] || '';
       const addr = f[FIELDS.serveAddr] || '';
       const docs = f[FIELDS.docs];
-      const stage = f[FIELDS.stage] || '';
+      const rawStage = f[FIELDS.stage]; const stage = (rawStage && typeof rawStage === 'object') ? rawStage.name : (rawStage || '');
       const svcClass = getServiceClass(serviceType);
       const svcBadge = getBadgeClass(serviceType);
 
