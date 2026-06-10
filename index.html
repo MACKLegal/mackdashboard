@@ -732,95 +732,61 @@ async function fetchJobs(token) {
 }
 
 function renderDashboard(records) {
-  // Filter to active stages
-  const active = records.filter(r => {
-    const s = fval(r, F.stage);
-    return s === 'New' || s === 'Attempting';
-  });
+  var STAGES = ['New', 'Attempting', 'Pending - Start Date', 'Served - Need POS', 'Served - Unpaid'];
+  var all = records.filter(function(r) { return STAGES.indexOf(fval(r, F.stage)) >= 0; });
+  var unpaid = all.filter(function(r) { var p = fval(r, F.paid); return p === '🔴' || p === 'Unpaid' || p === ''; });
+  var rush = all.filter(function(r) { return fval(r, F.serviceType).toLowerCase().indexOf('rush') >= 0; });
 
-  const unpaid = active.filter(r => {
-    const p = fval(r, F.paid);
-    return p === '🔴' || p === 'Unpaid' || p === '';
-  });
-  const noDocs = active.filter(r => !fval(r, F.docs));
-  const rush = active.filter(r => {
-    const t = fval(r, F.serviceType).toLowerCase();
-    return t.includes('rush');
-  });
+  var html = '<div class="stats-row">'
+    + '<div class="stat-card"><div class="stat-number gold">' + all.length + '</div><div class="stat-label">Total Jobs</div></div>'
+    + '<div class="stat-card"><div class="stat-number red">' + unpaid.length + '</div><div class="stat-label">Unpaid</div></div>'
+    + '<div class="stat-card"><div class="stat-number amber">' + rush.length + '</div><div class="stat-label">Rush</div></div>'
+    + '</div>';
 
-  let html = `
-    <div class="stats-row">
-      <div class="stat-card"><div class="stat-number gold">${active.length}</div><div class="stat-label">Active Jobs</div></div>
-      <div class="stat-card"><div class="stat-number red">${unpaid.length}</div><div class="stat-label">Unpaid</div></div>
-      <div class="stat-card"><div class="stat-number amber">${rush.length}</div><div class="stat-label">Rush</div></div>
-    </div>`;
+  STAGES.forEach(function(stageName, si) {
+    var group = all.filter(function(r) { return fval(r, F.stage) === stageName; });
+    if (!group.length) return;
 
-  // Attention items
-  const attention = [];
-  unpaid.forEach(r => attention.push({ color: 'dot-red', text: fval(r, F.subject) || fval(r, F.mackNum), label: 'Unpaid' }));
-  noDocs.forEach(r => {
-    if (!unpaid.includes(r)) attention.push({ color: 'dot-amber', text: fval(r, F.subject) || fval(r, F.mackNum), label: 'No Docs' });
-  });
+    html += '<div class="section-header" style="margin-top:16px;">'
+      + '<div class="section-title">' + stageName + '</div>'
+      + '<div style="display:flex;gap:8px;align-items:center;">'
+      + '<div class="section-count">' + group.length + '</div>'
+      + (si === 0 ? '<button class="refresh-btn" onclick="loadDashboard()">↻</button>' : '')
+      + '</div></div><div class="job-list">';
 
-  if (attention.length) {
-    html += `<div class="section-header"><div class="section-title">Needs Attention</div><div class="section-count">${attention.length}</div></div>
-    <div class="attention-list">`;
-    attention.forEach(a => {
-      html += `<div class="attention-item"><div class="attention-dot ${a.color}"></div><span>${a.text}</span><span class="attention-label">${a.label}</span></div>`;
+    group.forEach(function(r) {
+      var subject = fval(r, F.subject);
+      var mackNum = fval(r, F.mackNum);
+      var svcType = fval(r, F.serviceType);
+      var paidVal = fval(r, F.paid);
+      var docs    = fval(r, F.docs);
+      var display = fval(r, F.display);
+      var city    = display.split(' | ')[2] || '';
+      var isPaid  = paidVal === '🟢' || paidVal === 'Paid';
+      var svcLow  = svcType.toLowerCase();
+      var cardClass = svcLow.indexOf('rush rush') >= 0 ? 'rush-rush' : svcLow.indexOf('rush') >= 0 ? 'rush' : svcLow.indexOf('stakeout') >= 0 ? 'stakeout' : 'standard';
+      var svcBadge  = svcLow.indexOf('rush rush') >= 0 ? 'badge-rush-rush' : svcLow.indexOf('rush') >= 0 ? 'badge-rush' : svcLow.indexOf('stakeout') >= 0 ? 'badge-stakeout' : '';
+
+      html += '<div class="job-card ' + cardClass + '">'
+        + '<div class="job-top"><div>'
+        + (mackNum ? '<div class="job-mack">' + mackNum + '</div>' : '')
+        + '<div class="job-subject">' + (subject || mackNum) + '</div>'
+        + '</div><div class="job-badges">'
+        + '<span class="badge ' + (isPaid ? 'badge-paid' : 'badge-unpaid') + '">' + (isPaid ? 'Paid' : 'Unpaid') + '</span>'
+        + (svcType && svcType !== 'Standard' && svcBadge ? '<span class="badge ' + svcBadge + '">' + svcType + '</span>' : '')
+        + (!docs ? '<span class="badge badge-nodocs">No Docs</span>' : '')
+        + '</div></div>'
+        + '<div class="job-meta">' + (city ? '<span>📍 ' + city + '</span>' : '') + '</div>'
+        + '</div>';
     });
-    html += `</div>`;
-  }
 
-  html += `<div class="section-header">
-    <div class="section-title">Active Jobs</div>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <div class="section-count">${active.length}</div>
-      <button class="refresh-btn" onclick="loadDashboard()">↻</button>
-    </div>
-  </div><div class="job-list">`;
+    html += '</div>';
+  });
 
-  if (!active.length) {
-    html += `<div style="color:var(--muted);font-size:13px;padding:20px;text-align:center;">No active jobs</div>`;
-  } else {
-    active.forEach(r => {
-      const subject = fval(r, F.subject);
-      const mackNum = fval(r, F.mackNum);
-      const stage   = fval(r, F.stage);
-      const svcType = fval(r, F.serviceType);
-      const paidVal = fval(r, F.paid);
-      const docs    = fval(r, F.docs);
-      const display = fval(r, F.display);
-      // Get city from display formula: "emoji MACK-XXXX | Subject | City"
-      const city = display.split(' | ')[2] || '';
-      const isPaid = paidVal === '🟢' || paidVal === 'Paid';
-      const svcLow = svcType.toLowerCase();
-      const cardClass = svcLow.includes('rush rush') ? 'rush-rush' : svcLow.includes('rush') ? 'rush' : svcLow.includes('stakeout') ? 'stakeout' : 'standard';
-      const svcBadgeClass = svcLow.includes('rush rush') ? 'badge-rush-rush' : svcLow.includes('rush') ? 'badge-rush' : svcLow.includes('stakeout') ? 'badge-stakeout' : '';
-
-      html += `<div class="job-card ${cardClass}">
-        <div class="job-top">
-          <div>
-            ${mackNum ? `<div class="job-mack">${mackNum}</div>` : ''}
-            <div class="job-subject">${subject || mackNum}</div>
-          </div>
-          <div class="job-badges">
-            <span class="badge ${isPaid ? 'badge-paid' : 'badge-unpaid'}">${isPaid ? 'Paid' : 'Unpaid'}</span>
-            ${svcType && svcType !== 'Standard' && svcBadgeClass ? `<span class="badge ${svcBadgeClass}">${svcType}</span>` : ''}
-            ${!docs ? `<span class="badge badge-nodocs">No Docs</span>` : ''}
-          </div>
-        </div>
-        <div class="job-meta">
-          <span>${stage}</span>
-          ${city ? `<span>📍 ${city}</span>` : ''}
-        </div>
-      </div>`;
-    });
-  }
-
-  html += `</div>`;
   document.getElementById('dashboard-content').innerHTML = html;
   document.getElementById('last-updated').textContent = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
 }
+
 
 async function loadDashboard() {
   const token = getToken();
