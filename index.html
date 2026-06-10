@@ -670,6 +670,7 @@ const JOBS_TABLE = 'tblINyBTKoDPaxInh';
 const FIELDS = {
   display: 'fldDT7kO6tMYvNEWh',
   subject: 'fldRoML4plXzJdTRt',
+  mackNum: 'fld8OGMvR0rXD3nFU',
   stage: 'fld4nw4hBAHkBo89l',
   paid: 'fld1mUtxjx9KRgXh7',
   docs: 'fld67uAp5f67gMaeW',
@@ -755,7 +756,7 @@ function getBadgeClass(type) {
 
 function renderDashboard(records) {
   // Filter client-side to active stages
-  const ACTIVE_STAGE_VALUES = ['New', 'Attempting', 'Pending - Start Date'];
+  const ACTIVE_STAGE_VALUES = ['New', 'Attempting'];
   const activeJobs = records.filter(r => {
     const stage = r.fields[FIELDS.stage] || '';
     return ACTIVE_STAGE_VALUES.includes(stage);
@@ -851,11 +852,12 @@ function renderDashboard(records) {
       const svcClass = getServiceClass(serviceType);
       const svcBadge = getBadgeClass(serviceType);
 
-      // Parse from display: "MACK-XXXX | Subject | City"
-      const parts = display.split(' | ');
-      const mackNum = parts[0] || '';
-      const subject = parts[1] || f[FIELDS.subject] || display || r.id;
-      const city = parts[2] || '';
+      // Use direct fields
+      const mackNum = f[FIELDS.mackNum] || '';
+      const subject = f[FIELDS.subject] || display || r.id;
+      // Parse city from display formula: "emoji MACK | Subject | City"
+      const displayParts = display.split(' | ');
+      const city = displayParts[2] || '';
 
       html += `
         <div class="job-card ${svcClass}">
