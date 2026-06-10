@@ -722,7 +722,9 @@ function hideError() {
 
 async function fetchJobs(token) {
   const fieldIds = Object.values(FIELDS).map(f => `fields[]=${f}`).join('&');
-  const url = `https://api.airtable.com/v0/${BASE_ID}/${JOBS_TABLE}?${fieldIds}&pageSize=100`;
+  // Filter to only active stages
+  const filter = encodeURIComponent(`OR({Stage (Auto)}="New",{Stage (Auto)}="Attempting",{Stage (Auto)}="Pending - Start Date")`);
+  const url = `https://api.airtable.com/v0/${BASE_ID}/${JOBS_TABLE}?${fieldIds}&filterByFormula=${filter}&pageSize=100`;
 
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` }
@@ -752,15 +754,8 @@ function getBadgeClass(type) {
 }
 
 function renderDashboard(records) {
-  // Filter to active jobs (non-served, non-completed)
-  const activeJobs = records.filter(r => {
-    const stage = r.fields[FIELDS.stage] || '';
-    const outcome = r.fields['fldZuukMEpaXvvA4G'] || '';
-    // Exclude clearly done stages
-    const doneStages = ['Served', 'Completed', 'Closed', 'Cancelled'];
-    return !doneStages.some(s => stage.toLowerCase().includes(s.toLowerCase())) &&
-           !doneStages.some(s => outcome.toLowerCase().includes(s.toLowerCase()));
-  });
+  // Records are already filtered to active stages by API query
+  const activeJobs = records;
 
   const unpaidJobs = activeJobs.filter(r => r.fields[FIELDS.paid] === 'Unpaid');
   const noDocs = activeJobs.filter(r => !r.fields[FIELDS.docs]);
@@ -769,17 +764,19 @@ function renderDashboard(records) {
     return t.toLowerCase().includes('rush');
   });
 
+  // Helper: get display label from Job Display formula field
+  function getLabel(r) {
+    return r.fields[FIELDS.display] || r.fields[FIELDS.subject] || r.id;
+  }
+
   // Attention items
   const attentionItems = [];
   unpaidJobs.forEach(r => {
-    const display = r.fields[FIELDS.display] || r.fields[FIELDS.subject] || 'Unknown';
-    attentionItems.push({ color: 'dot-red', text: display, label: 'Unpaid' });
+    attentionItems.push({ color: 'dot-red', text: getLabel(r), label: 'Unpaid' });
   });
   noDocs.forEach(r => {
-    const display = r.fields[FIELDS.display] || r.fields[FIELDS.subject] || 'Unknown';
-    // Avoid duplicates
     if (!unpaidJobs.find(u => u.id === r.id)) {
-      attentionItems.push({ color: 'dot-amber', text: display, label: 'No Docs' });
+      attentionItems.push({ color: 'dot-amber', text: getLabel(r), label: 'No Docs' });
     }
   });
 
@@ -835,18 +832,19 @@ function renderDashboard(records) {
     activeJobs.forEach(r => {
       const f = r.fields;
       const display = f[FIELDS.display] || '';
-      const subject = f[FIELDS.subject] || 'Unknown';
-      const stage = f[FIELDS.stage] || '—';
       const paid = f[FIELDS.paid] || 'Unpaid';
       const serviceType = f[FIELDS.serviceType] || '';
       const addr = f[FIELDS.serveAddr] || '';
       const docs = f[FIELDS.docs];
+      const stage = f[FIELDS.stage] || '';
       const svcClass = getServiceClass(serviceType);
       const svcBadge = getBadgeClass(serviceType);
 
-      // Parse MACK number from display
-      const mackMatch = display.match(/MACK-\d+/);
-      const mackNum = mackMatch ? mackMatch[0] : '';
+      // Parse from display: "MACK-XXXX | Subject | City"
+      const parts = display.split(' | ');
+      const mackNum = parts[0] || '';
+      const subject = parts[1] || f[FIELDS.subject] || display || r.id;
+      const city = parts[2] || '';
 
       html += `
         <div class="job-card ${svcClass}">
@@ -862,8 +860,7 @@ function renderDashboard(records) {
             </div>
           </div>
           <div class="job-meta">
-            <span>${stage}</span>
-            ${addr ? `<span>📍 ${addr}</span>` : ''}
+            ${city ? `<span>\u{1F4CD} ${city}</span>` : addr ? `<span>\u{1F4CD} ${addr}</span>` : ''}
           </div>
         </div>
       `;
