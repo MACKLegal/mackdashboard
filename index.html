@@ -723,8 +723,8 @@ function hideError() {
 async function fetchJobs(token) {
   const fieldIds = Object.values(FIELDS).map(f => `fields[]=${f}`).join('&');
   // Filter to only active stages
-  const filter = encodeURIComponent(`OR({Stage (Auto)}="New",{Stage (Auto)}="Attempting",{Stage (Auto)}="Pending - Start Date")`);
-  const url = `https://api.airtable.com/v0/${BASE_ID}/${JOBS_TABLE}?${fieldIds}&filterByFormula=${filter}&pageSize=100`;
+  // Pull all records, filter client-side
+  const url = `https://api.airtable.com/v0/${BASE_ID}/${JOBS_TABLE}?${fieldIds}&pageSize=100`;
 
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` }
@@ -754,8 +754,19 @@ function getBadgeClass(type) {
 }
 
 function renderDashboard(records) {
-  // Records are already filtered to active stages by API query
-  const activeJobs = records;
+  // Filter client-side to active stages
+  const ACTIVE_STAGE_VALUES = ['New', 'Attempting', 'Pending - Start Date'];
+  const activeJobs = records.filter(r => {
+    const stage = r.fields[FIELDS.stage] || '';
+    return ACTIVE_STAGE_VALUES.includes(stage);
+  });
+
+  // Debug: log first record to console so we can see field values
+  if (records.length > 0) {
+    console.log('Sample record fields:', JSON.stringify(records[0].fields));
+    console.log('Stage field value:', records[0].fields[FIELDS.stage]);
+    console.log('Display field value:', records[0].fields[FIELDS.display]);
+  }
 
   const unpaidJobs = activeJobs.filter(r => r.fields[FIELDS.paid] === 'Unpaid');
   const noDocs = activeJobs.filter(r => !r.fields[FIELDS.docs]);
