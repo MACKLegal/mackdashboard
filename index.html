@@ -832,9 +832,18 @@ async function loadDashboard() {
     <div class="loading">Loading<span class="loading-dot">.</span><span class="loading-dot">.</span><span class="loading-dot">.</span></div>`;
   try {
     const records = await fetchJobs(token);
+    // DEBUG: show raw first record
+    if (records.length > 0) {
+      document.getElementById('dashboard-content').innerHTML = 
+        '<div style="color:#c9a84c;font-size:11px;padding:10px;word-break:break-all;font-family:monospace;">' +
+        'RECORDS: ' + records.length + '<br>' +
+        'SAMPLE: ' + JSON.stringify(records[0]).substring(0, 400) +
+        '</div>';
+      return;
+    }
     renderDashboard(records);
   } catch(err) {
-    showError('Could not load jobs — check your token in Settings. ' + err.message);
+    showError('Could not load jobs — ' + err.message);
     document.getElementById('dashboard-content').innerHTML = '';
   }
 }
