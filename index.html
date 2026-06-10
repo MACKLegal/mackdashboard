@@ -722,18 +722,15 @@ function hideError() {
 }
 
 async function fetchJobs(token) {
-  const fieldIds = Object.values(FIELDS).map(f => `fields[]=${f}`).join('&');
-  // Filter to only active stages
-  // Pull all records, filter client-side
-  const url = `https://api.airtable.com/v0/${BASE_ID}/${JOBS_TABLE}?${fieldIds}&pageSize=100`;
-
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-
+  const fieldParams = Object.values(FIELDS).map(f => 'fields%5B%5D=' + f).join('&');
+  const url = `https://api.airtable.com/v0/${BASE_ID}/${JOBS_TABLE}?${fieldParams}&pageSize=100`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
   if (!res.ok) throw new Error(`Airtable error ${res.status}`);
   const data = await res.json();
-  return data.records || [];
+  return (data.records || []).map(r => ({
+    id: r.id,
+    fields: r.fields || r.cellValuesByFieldId || {}
+  }));
 }
 
 function getServiceClass(type) {
@@ -756,7 +753,6 @@ function getBadgeClass(type) {
 
 function renderDashboard(records) {
   // Filter client-side to active stages
-  // Stage is a singleSelect — value may be a string or object with .name
   const ACTIVE_STAGE_VALUES = ['New', 'Attempting'];
   const activeJobs = records.filter(r => {
     const raw = r.fields[FIELDS.stage];
@@ -771,7 +767,14 @@ function renderDashboard(records) {
     console.log('Display field value:', records[0].fields[FIELDS.display]);
   }
 
-  const unpaidJobs = activeJobs.filter(r => r.fields[FIELDS.paid] === 'Unpaid');
+  // Paid field returns emoji object: 🟢=Paid, 🔴=Unpaid
+  function isPaid(r) {
+    const v = r.fields[FIELDS.paid];
+    if (!v) return false;
+    const name = typeof v === 'object' ? v.name : v;
+    return name === '🟢' || name === 'Paid';
+  }
+  const unpaidJobs = activeJobs.filter(r => !isPaid(r));
   const noDocs = activeJobs.filter(r => !r.fields[FIELDS.docs]);
   const rushJobs = activeJobs.filter(r => {
     const t = r.fields[FIELDS.serviceType] || '';
@@ -846,7 +849,7 @@ function renderDashboard(records) {
     activeJobs.forEach(r => {
       const f = r.fields;
       const display = f[FIELDS.display] || '';
-      const paid = f[FIELDS.paid] || 'Unpaid';
+      // paid handled by isPaid(r)
       const serviceType = f[FIELDS.serviceType] || '';
       const addr = f[FIELDS.serveAddr] || '';
       const docs = f[FIELDS.docs];
@@ -869,7 +872,7 @@ function renderDashboard(records) {
               <div class="job-subject">${subject}</div>
             </div>
             <div class="job-badges">
-              <span class="badge ${paid === 'Unpaid' ? 'badge-unpaid' : 'badge-paid'}">${paid}</span>
+              <span class="badge ${isPaid(r) ? 'badge-paid' : 'badge-unpaid'}">${isPaid(r) ? 'Paid' : 'Unpaid'}</span>
               ${serviceType && serviceType !== 'Standard' ? `<span class="badge ${svcBadge}">${serviceType}</span>` : ''}
               ${!docs ? `<span class="badge badge-nodocs">No Docs</span>` : ''}
             </div>
