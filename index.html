@@ -667,26 +667,20 @@
 const BASE_ID = 'appvnviHqt155NagF';
 const JOBS_TABLE = 'tblINyBTKoDPaxInh';
 
-const FIELDS = {
-  display: 'fldDT7kO6tMYvNEWh',
-  subject: 'fldRoML4plXzJdTRt',
-  mackNum: 'fld8OGMvR0rXD3nFU',
-  stage: 'fld4nw4hBAHkBo89l',
-  paid: 'fld1mUtxjx9KRgXh7',
-  docs: 'fld67uAp5f67gMaeW',
+// Field IDs
+const F = {
+  display:     'fldDT7kO6tMYvNEWh',
+  subject:     'fldRoML4plXzJdTRt',
+  mackNum:     'fld8OGMvR0rXD3nFU',
+  stage:       'fld4nw4hBAHkBo89l',
+  paid:        'fld1mUtxjx9KRgXh7',
+  docs:        'fld67uAp5f67gMaeW',
   serviceType: 'fldZjMFqILgbrAmKK',
-  serveAddr: 'fldBpzM5GbnQhqntU',
-  clientFile: 'fldpMJYJ0ly4poADf',
-  proofFiling: 'fldrRgY6KTXU3bOWQ',
-  stakeout: 'fldZe9ZbFweYimYMi',
+  serveAddr:   'fldBpzM5GbnQhqntU',
+  notes:       'fldKQbxY0CWzUQF2g',
 };
 
-// Active stages — adjust to match your Airtable stage values
-const ACTIVE_STAGES = ['New', 'In Progress', 'Pending', 'Assigned', 'Active', 'Open'];
-
-function getToken() {
-  return localStorage.getItem('mack_airtable_token') || '';
-}
+function getToken() { return localStorage.getItem('mack_airtable_token') || ''; }
 
 function saveToken() {
   const t = document.getElementById('token-input-dashboard').value.trim();
@@ -716,172 +710,107 @@ function showError(msg) {
   el.textContent = msg;
   el.style.display = 'block';
 }
+function hideError() { document.getElementById('error-banner').style.display = 'none'; }
 
-function hideError() {
-  document.getElementById('error-banner').style.display = 'none';
+// Get a field value — handles both string and {name, ...} object formats
+function fval(record, fieldId) {
+  const v = record[fieldId];
+  if (v === undefined || v === null) return '';
+  if (typeof v === 'object' && !Array.isArray(v)) return v.name || '';
+  if (Array.isArray(v)) return v.map(i => typeof i === 'object' ? i.name : i).join(', ');
+  return String(v);
 }
 
 async function fetchJobs(token) {
-  const fieldParams = Object.values(FIELDS).map(f => 'fields%5B%5D=' + f).join('&');
-  const url = `https://api.airtable.com/v0/${BASE_ID}/${JOBS_TABLE}?${fieldParams}&pageSize=100`;
+  const fields = Object.values(F).map(id => `fields[]=${id}`).join('&');
+  const url = `https://api.airtable.com/v0/${BASE_ID}/${JOBS_TABLE}?${fields}&pageSize=100`;
   const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
   if (!res.ok) throw new Error(`Airtable error ${res.status}`);
   const data = await res.json();
-  return (data.records || []).map(r => ({
-    id: r.id,
-    fields: r.fields || r.cellValuesByFieldId || {}
-  }));
-}
-
-function getServiceClass(type) {
-  if (!type) return 'standard';
-  const t = type.toLowerCase();
-  if (t === 'rush rush') return 'rush-rush';
-  if (t === 'rush') return 'rush';
-  if (t === 'stakeout') return 'stakeout';
-  return 'standard';
-}
-
-function getBadgeClass(type) {
-  if (!type) return '';
-  const t = type.toLowerCase();
-  if (t === 'rush rush') return 'badge-rush-rush';
-  if (t === 'rush') return 'badge-rush';
-  if (t === 'stakeout') return 'badge-stakeout';
-  return '';
+  // Airtable REST API returns records[].fields
+  return (data.records || []).map(r => r.fields || {});
 }
 
 function renderDashboard(records) {
-  // Filter client-side to active stages
-  const ACTIVE_STAGE_VALUES = ['New', 'Attempting'];
-  const activeJobs = records.filter(r => {
-    const raw = r.fields[FIELDS.stage];
-    const stage = (raw && typeof raw === 'object') ? raw.name : (raw || '');
-    return ACTIVE_STAGE_VALUES.includes(stage);
+  // Filter to active stages
+  const active = records.filter(r => {
+    const s = fval(r, F.stage);
+    return s === 'New' || s === 'Attempting';
   });
 
-  // Debug: log first record to console so we can see field values
-  if (records.length > 0) {
-    console.log('Sample record fields:', JSON.stringify(records[0].fields));
-    console.log('Stage field value:', records[0].fields[FIELDS.stage]);
-    console.log('Display field value:', records[0].fields[FIELDS.display]);
-  }
-
-  // Paid field returns emoji object: 🟢=Paid, 🔴=Unpaid
-  function isPaid(r) {
-    const v = r.fields[FIELDS.paid];
-    if (!v) return false;
-    const name = typeof v === 'object' ? v.name : v;
-    return name === '🟢' || name === 'Paid';
-  }
-  const unpaidJobs = activeJobs.filter(r => !isPaid(r));
-  const noDocs = activeJobs.filter(r => !r.fields[FIELDS.docs]);
-  const rushJobs = activeJobs.filter(r => {
-    const t = r.fields[FIELDS.serviceType] || '';
-    return t.toLowerCase().includes('rush');
-  });
-
-  // Helper: get display label from Job Display formula field
-  function getLabel(r) {
-    return r.fields[FIELDS.display] || r.fields[FIELDS.subject] || r.id;
-  }
-
-  // Attention items
-  const attentionItems = [];
-  unpaidJobs.forEach(r => {
-    attentionItems.push({ color: 'dot-red', text: getLabel(r), label: 'Unpaid' });
-  });
-  noDocs.forEach(r => {
-    if (!unpaidJobs.find(u => u.id === r.id)) {
-      attentionItems.push({ color: 'dot-amber', text: getLabel(r), label: 'No Docs' });
-    }
+  const unpaid = active.filter(r => fval(r, F.paid) === '🔴');
+  const noDocs = active.filter(r => !fval(r, F.docs));
+  const rush = active.filter(r => {
+    const t = fval(r, F.serviceType).toLowerCase();
+    return t.includes('rush');
   });
 
   let html = `
     <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-number gold">${activeJobs.length}</div>
-        <div class="stat-label">Active Jobs</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number red">${unpaidJobs.length}</div>
-        <div class="stat-label">Unpaid</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number amber">${rushJobs.length}</div>
-        <div class="stat-label">Rush</div>
-      </div>
-    </div>
-  `;
+      <div class="stat-card"><div class="stat-number gold">${active.length}</div><div class="stat-label">Active Jobs</div></div>
+      <div class="stat-card"><div class="stat-number red">${unpaid.length}</div><div class="stat-label">Unpaid</div></div>
+      <div class="stat-card"><div class="stat-number amber">${rush.length}</div><div class="stat-label">Rush</div></div>
+    </div>`;
 
-  if (attentionItems.length > 0) {
-    html += `
-      <div class="section-header">
-        <div class="section-title">Needs Attention</div>
-        <div class="section-count">${attentionItems.length}</div>
-      </div>
-      <div class="attention-list">
-        ${attentionItems.map(a => `
-          <div class="attention-item">
-            <div class="attention-dot ${a.color}"></div>
-            <span>${a.text}</span>
-            <span class="attention-label">${a.label}</span>
-          </div>
-        `).join('')}
-      </div>
-    `;
+  // Attention items
+  const attention = [];
+  unpaid.forEach(r => attention.push({ color: 'dot-red', text: fval(r, F.subject) || fval(r, F.mackNum), label: 'Unpaid' }));
+  noDocs.forEach(r => {
+    if (!unpaid.includes(r)) attention.push({ color: 'dot-amber', text: fval(r, F.subject) || fval(r, F.mackNum), label: 'No Docs' });
+  });
+
+  if (attention.length) {
+    html += `<div class="section-header"><div class="section-title">Needs Attention</div><div class="section-count">${attention.length}</div></div>
+    <div class="attention-list">`;
+    attention.forEach(a => {
+      html += `<div class="attention-item"><div class="attention-dot ${a.color}"></div><span>${a.text}</span><span class="attention-label">${a.label}</span></div>`;
+    });
+    html += `</div>`;
   }
 
-  html += `
-    <div class="section-header">
-      <div class="section-title">Active Jobs</div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <div class="section-count">${activeJobs.length}</div>
-        <button class="refresh-btn" onclick="loadDashboard()">↻</button>
-      </div>
+  html += `<div class="section-header">
+    <div class="section-title">Active Jobs</div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <div class="section-count">${active.length}</div>
+      <button class="refresh-btn" onclick="loadDashboard()">↻</button>
     </div>
-    <div class="job-list">
-  `;
+  </div><div class="job-list">`;
 
-  if (activeJobs.length === 0) {
+  if (!active.length) {
     html += `<div style="color:var(--muted);font-size:13px;padding:20px;text-align:center;">No active jobs</div>`;
   } else {
-    activeJobs.forEach(r => {
-      const f = r.fields;
-      const display = f[FIELDS.display] || '';
-      // paid handled by isPaid(r)
-      const serviceType = f[FIELDS.serviceType] || '';
-      const addr = f[FIELDS.serveAddr] || '';
-      const docs = f[FIELDS.docs];
-      const rawStage = f[FIELDS.stage]; const stage = (rawStage && typeof rawStage === 'object') ? rawStage.name : (rawStage || '');
-      const svcClass = getServiceClass(serviceType);
-      const svcBadge = getBadgeClass(serviceType);
+    active.forEach(r => {
+      const subject = fval(r, F.subject);
+      const mackNum = fval(r, F.mackNum);
+      const stage   = fval(r, F.stage);
+      const svcType = fval(r, F.serviceType);
+      const paidVal = fval(r, F.paid);
+      const docs    = fval(r, F.docs);
+      const display = fval(r, F.display);
+      // Get city from display formula: "emoji MACK-XXXX | Subject | City"
+      const city = display.split(' | ')[2] || '';
+      const isPaid = paidVal === '🟢';
+      const svcLow = svcType.toLowerCase();
+      const cardClass = svcLow.includes('rush rush') ? 'rush-rush' : svcLow.includes('rush') ? 'rush' : svcLow.includes('stakeout') ? 'stakeout' : 'standard';
+      const svcBadgeClass = svcLow.includes('rush rush') ? 'badge-rush-rush' : svcLow.includes('rush') ? 'badge-rush' : svcLow.includes('stakeout') ? 'badge-stakeout' : '';
 
-      // Use direct fields
-      const mackNum = f[FIELDS.mackNum] || '';
-      const subject = f[FIELDS.subject] || display || r.id;
-      // Parse city from display formula: "emoji MACK | Subject | City"
-      const displayParts = display.split(' | ');
-      const city = displayParts[2] || '';
-
-      html += `
-        <div class="job-card ${svcClass}">
-          <div class="job-top">
-            <div>
-              ${mackNum ? `<div class="job-mack">${mackNum}</div>` : ''}
-              <div class="job-subject">${subject}</div>
-            </div>
-            <div class="job-badges">
-              <span class="badge ${isPaid(r) ? 'badge-paid' : 'badge-unpaid'}">${isPaid(r) ? 'Paid' : 'Unpaid'}</span>
-              ${serviceType && serviceType !== 'Standard' ? `<span class="badge ${svcBadge}">${serviceType}</span>` : ''}
-              ${!docs ? `<span class="badge badge-nodocs">No Docs</span>` : ''}
-            </div>
+      html += `<div class="job-card ${cardClass}">
+        <div class="job-top">
+          <div>
+            ${mackNum ? `<div class="job-mack">${mackNum}</div>` : ''}
+            <div class="job-subject">${subject || mackNum}</div>
           </div>
-          <div class="job-meta">
-            ${city ? `<span>\u{1F4CD} ${city}</span>` : addr ? `<span>\u{1F4CD} ${addr}</span>` : ''}
+          <div class="job-badges">
+            <span class="badge ${isPaid ? 'badge-paid' : 'badge-unpaid'}">${isPaid ? 'Paid' : 'Unpaid'}</span>
+            ${svcType && svcType !== 'Standard' && svcBadgeClass ? `<span class="badge ${svcBadgeClass}">${svcType}</span>` : ''}
+            ${!docs ? `<span class="badge badge-nodocs">No Docs</span>` : ''}
           </div>
         </div>
-      `;
+        <div class="job-meta">
+          <span>${stage}</span>
+          ${city ? `<span>📍 ${city}</span>` : ''}
+        </div>
+      </div>`;
     });
   }
 
@@ -897,23 +826,19 @@ async function loadDashboard() {
     document.getElementById('token-warning').style.display = 'block';
     return;
   }
-
   document.getElementById('token-warning').style.display = 'none';
   hideError();
   document.getElementById('dashboard-content').innerHTML = `
-    <div class="loading">Loading<span class="loading-dot">.</span><span class="loading-dot">.</span><span class="loading-dot">.</span></div>
-  `;
-
+    <div class="loading">Loading<span class="loading-dot">.</span><span class="loading-dot">.</span><span class="loading-dot">.</span></div>`;
   try {
     const records = await fetchJobs(token);
     renderDashboard(records);
-  } catch (err) {
-    showError('Could not load jobs. Check your token in Settings.');
+  } catch(err) {
+    showError('Could not load jobs — check your token in Settings. ' + err.message);
     document.getElementById('dashboard-content').innerHTML = '';
   }
 }
 
-// Init
 window.addEventListener('load', () => {
   const saved = getToken();
   if (saved) {
