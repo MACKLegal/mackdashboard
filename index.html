@@ -470,184 +470,11 @@
 
 <!-- PROJECTS PAGE -->
 <div class="page" id="page-projects">
-
   <div class="section-header" style="margin-bottom:16px;">
     <div class="section-title">Build Tracker</div>
-    <div class="nav-updated">Updated June 10, 2026</div>
+    <div class="nav-updated" id="projects-updated">Loading...</div>
   </div>
-
-  <!-- ACTIVE -->
-  <div class="section-header">
-    <div class="section-title">Active</div>
-  </div>
-  <div class="projects-grid" style="margin-bottom:20px;">
-    <div class="project-card">
-      <div class="project-status-dot dot-active"></div>
-      <div class="project-info">
-        <div class="project-name">GitHub Pages Dashboard</div>
-        <div class="project-desc">Mobile-optimized jobs + project status — accessible anywhere via Safari</div>
-      </div>
-      <div class="project-tag tag-active">Active</div>
-    </div>
-  </div>
-
-  <!-- NEXT UP -->
-  <div class="section-header">
-    <div class="section-title">Next Up</div>
-  </div>
-  <div class="projects-grid" style="margin-bottom:20px;">
-    <div class="project-card">
-      <div class="project-status-dot dot-next"></div>
-      <div class="project-info">
-        <div class="project-name">Mac Mini Setup</div>
-        <div class="project-desc">Copy scripts, install launchers, set each as launchd background service — runs 24/7</div>
-      </div>
-      <div class="project-tag tag-next">This Week</div>
-    </div>
-    <div class="project-card done">
-      <div class="project-status-dot dot-done"></div>
-      <div class="project-info">
-        <div class="project-name">mackstart Launcher</div>
-        <div class="project-desc">One command opens Terminal tabs for all scripts at once</div>
-      </div>
-      <div class="project-tag tag-done">✓ Done</div>
-    </div>
-    <div class="project-card">
-      <div class="project-status-dot dot-next"></div>
-      <div class="project-info">
-        <div class="project-name">Gmail Auto-Reply Integration</div>
-        <div class="project-desc">Hook gmail_proof_reply.py into proofs script — triggers automatically after signing</div>
-      </div>
-      <div class="project-tag tag-next">This Week</div>
-    </div>
-    <div class="project-card done">
-      <div class="project-status-dot dot-done"></div>
-      <div class="project-info">
-        <div class="project-name">newjob → Airtable Auto-Create</div>
-        <div class="project-desc">When file is filed by newjob, auto-create Jobs record in Airtable with defaults</div>
-      </div>
-      <div class="project-tag tag-done">✓ Done</div>
-    </div>
-    <div class="project-card">
-      <div class="project-status-dot dot-next"></div>
-      <div class="project-info">
-        <div class="project-name">Airtable Projects Table</div>
-        <div class="project-desc">Track all automation builds, phases, and status — feeds into daily summary email</div>
-      </div>
-      <div class="project-tag tag-next">This Week</div>
-    </div>
-  </div>
-
-  <!-- OPERATIONAL -->
-  <div class="section-header">
-    <div class="section-title">Operational</div>
-  </div>
-  <div class="projects-grid" style="margin-bottom:20px;">
-    <div class="project-card">
-      <div class="project-status-dot dot-done"></div>
-      <div class="project-info">
-        <div class="project-name">Vera (Claude AI)</div>
-        <div class="project-desc">Add jobs, log attempts, generate invoices, POS forms, MC-030</div>
-      </div>
-      <div class="project-tag tag-done">✓ Live</div>
-    </div>
-    <div class="project-card done">
-      <div class="project-status-dot dot-done"></div>
-      <div class="project-info">
-        <div class="project-name">newjob</div>
-        <div class="project-desc">Watches _INCOMING_JOBS, matches by Client File #, creates folders, files docs</div>
-      </div>
-      <div class="project-tag tag-done">✓ Done</div>
-    </div>
-    <div class="project-card done">
-      <div class="project-status-dot dot-done"></div>
-      <div class="project-info">
-        <div class="project-name">proofs</div>
-        <div class="project-desc">Watches _PROOFS_TO_SIGN, signs PDFs, files to correct job folder</div>
-      </div>
-      <div class="project-tag tag-done">✓ Done</div>
-    </div>
-    <div class="project-card">
-      <div class="project-status-dot dot-done"></div>
-      <div class="project-info">
-        <div class="project-name">Morning Briefing + Daily Summary</div>
-        <div class="project-desc">7am briefing + 6pm summary — active jobs, pending, unpaid — email + iMessage</div>
-      </div>
-      <div class="project-tag tag-done">✓ Live</div>
-    </div>
-    <div class="project-card">
-      <div class="project-status-dot dot-done"></div>
-      <div class="project-info">
-        <div class="project-name">Gmail Proof Reply</div>
-        <div class="project-desc">Finds original email thread, previews, sends signed PDF on confirm</div>
-      </div>
-      <div class="project-tag tag-done">✓ Live</div>
-    </div>
-    <div class="project-card done">
-      <div class="project-status-dot dot-done"></div>
-      <div class="project-info">
-        <div class="project-name">mack_rename (v11)</div>
-        <div class="project-desc">Renames iCloud subject folders to LastName_MACK-XXXX format</div>
-      </div>
-      <div class="project-tag tag-done">✓ Done</div>
-    </div>
-  </div>
-
-  <!-- FUTURE -->
-  <div class="section-header">
-    <div class="section-title">Future Builds</div>
-  </div>
-  <div class="projects-grid" style="margin-bottom:20px;">
-    <div class="project-card">
-      <div class="project-status-dot dot-future"></div>
-      <div class="project-info">
-        <div class="project-name">Full AI PDF Parsing</div>
-        <div class="project-desc">Claude API reads incoming PDFs, extracts all job data, creates Airtable record automatically</div>
-      </div>
-      <div class="project-tag tag-future">After Mini</div>
-    </div>
-    <div class="project-card">
-      <div class="project-status-dot dot-future"></div>
-      <div class="project-info">
-        <div class="project-name">Push Notifications</div>
-        <div class="project-desc">iPhone alerts when file filed, job created, proof signed</div>
-      </div>
-      <div class="project-tag tag-future">After Mini</div>
-    </div>
-    <div class="project-card">
-      <div class="project-status-dot dot-future"></div>
-      <div class="project-info">
-        <div class="project-name">Client Portal — Status View</div>
-        <div class="project-desc">Clients log in, see job status and attempt history</div>
-      </div>
-      <div class="project-tag tag-future">After Mini</div>
-    </div>
-    <div class="project-card">
-      <div class="project-status-dot dot-future"></div>
-      <div class="project-info">
-        <div class="project-name">iPhone App</div>
-        <div class="project-desc">Native Swift/SwiftUI — jobs list, log attempts, add jobs, push notifications, client portal</div>
-      </div>
-      <div class="project-tag tag-future">6–8 Weeks</div>
-    </div>
-    <div class="project-card">
-      <div class="project-status-dot dot-future"></div>
-      <div class="project-info">
-        <div class="project-name">Attorney Email Outreach</div>
-        <div class="project-desc">~170 Coachella Valley firms, ~30% email hit rate — outreach not yet sent</div>
-      </div>
-      <div class="project-tag tag-future">Queued</div>
-    </div>
-    <div class="project-card">
-      <div class="project-status-dot dot-future"></div>
-      <div class="project-info">
-        <div class="project-name">Mileage Tracking</div>
-        <div class="project-desc">Auto-log mileage per job for tax deductions</div>
-      </div>
-      <div class="project-tag tag-future">Queued</div>
-    </div>
-  </div>
-
+  <div id="projects-content"><p style="color:#666;padding:20px 0;">Loading projects...</p></div>
 </div>
 
 <!-- SETTINGS PAGE -->
@@ -717,6 +544,57 @@ function saveTokenFromSettings() {
   if (!t) return;
   localStorage.setItem('mack_airtable_token', t);
   alert('Token saved.');
+}
+
+function loadProjects() {
+  const token = getToken();
+  if (!token) {
+    document.getElementById('projects-content').innerHTML = '<p style="color:#c9a84c;padding:20px 0;">No Airtable token — enter it in ⚙ Settings.</p>';
+    return;
+  }
+  const BASE = 'appvnviHqt155NagF';
+  const TABLE = 'tblrNDhaIq78yx3kO';
+  const url = `https://api.airtable.com/v0/${BASE}/${TABLE}?pageSize=100&sort[0][field]=Sort+Order&sort[0][direction]=asc`;
+  fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+    .then(r => r.json())
+    .then(data => {
+      const records = (data.records || []).map(r => r.fields);
+      const order = ['Active','Next Up','Operational','Future','Cancelled'];
+      const groups = {};
+      order.forEach(s => groups[s] = []);
+      records.forEach(r => {
+        const s = r['Status'] || 'Future';
+        if (groups[s]) groups[s].push(r);
+      });
+      const dotClass = { 'Active':'dot-active', 'Next Up':'dot-next', 'Operational':'dot-done', 'Future':'dot-future', 'Cancelled':'dot-future' };
+      const tagClass = { 'Active':'tag-active', 'Next Up':'tag-next', 'Operational':'tag-done', 'Future':'tag-future', 'Cancelled':'tag-future' };
+      const tagLabel = { 'Active':'Active', 'Next Up':'Next Up', 'Operational':'✓ Live', 'Future':'Future', 'Cancelled':'Cancelled' };
+      const sectionLabel = { 'Active':'Active', 'Next Up':'Next Up', 'Operational':'Operational', 'Future':'Future Builds', 'Cancelled':'Cancelled' };
+      let html = '';
+      order.forEach(status => {
+        if (!groups[status] || groups[status].length === 0) return;
+        html += `<div class="section-header"><div class="section-title">${sectionLabel[status]}</div></div>`;
+        html += `<div class="projects-grid" style="margin-bottom:20px;">`;
+        groups[status].forEach(r => {
+          const name = r['Name'] || '';
+          const desc = r['Description'] || '';
+          html += `<div class="project-card">
+            <div class="project-status-dot ${dotClass[status]}"></div>
+            <div class="project-info">
+              <div class="project-name">${name}</div>
+              <div class="project-desc">${desc}</div>
+            </div>
+            <div class="project-tag ${tagClass[status]}">${tagLabel[status]}</div>
+          </div>`;
+        });
+        html += `</div>`;
+      });
+      document.getElementById('projects-content').innerHTML = html;
+      document.getElementById('projects-updated').textContent = 'Live from Airtable';
+    })
+    .catch(e => {
+      document.getElementById('projects-content').innerHTML = `<p style="color:#c44;padding:20px 0;">Error loading projects: ${e.message}</p>`;
+    });
 }
 
 function showPage(id) {
@@ -871,6 +749,7 @@ window.addEventListener('load', () => {
 
 </body>
 </html>
+
 
 
 
