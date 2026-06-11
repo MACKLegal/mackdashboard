@@ -529,7 +529,9 @@ const F = {
 
 };
 
+function isNetlify() { return window.location.hostname.includes('netlify'); }
 function getToken() { return localStorage.getItem('mack_airtable_token') || ''; }
+function hasAccess() { return isNetlify() || getToken(); }
 
 function saveToken() {
   const t = document.getElementById('token-input-dashboard').value.trim();
@@ -561,7 +563,7 @@ function proxyFetch(airtableUrl, token) {
 
 function loadProjects() {
   const token = getToken();
-  if (!token) {
+  if (!hasAccess()) {
     document.getElementById('projects-content').innerHTML = '<p style="color:#c9a84c;padding:20px 0;">No Airtable token — enter it in ⚙ Settings.</p>';
     return;
   }
@@ -732,7 +734,7 @@ function renderDashboard(records) {
 
 async function loadDashboard() {
   const token = getToken();
-  if (!token) {
+  if (!hasAccess()) {
     document.getElementById('dashboard-content').innerHTML = '';
     document.getElementById('token-warning').style.display = 'block';
     return;
@@ -765,6 +767,7 @@ window.addEventListener('load', () => {
 
 </body>
 </html>
+
 
 
 
