@@ -563,7 +563,8 @@ function loadProjects() {
       const groups = {};
       order.forEach(s => groups[s] = []);
       records.forEach(r => {
-        const s = r['Status'] || 'Future';
+        const statusVal = r['Status'];
+        const s = (statusVal && typeof statusVal === 'object') ? statusVal.name : (statusVal || 'Future');
         if (groups[s]) groups[s].push(r);
       });
       const dotClass = { 'Active':'dot-active', 'Next Up':'dot-next', 'Operational':'dot-done', 'Future':'dot-future', 'Cancelled':'dot-future' };
@@ -603,6 +604,7 @@ function showPage(id) {
   document.getElementById('page-' + id).classList.add('active');
   event.target.classList.add('active');
   if (id === 'dashboard') loadDashboard();
+  if (id === 'projects') loadProjects();
 }
 
 function showError(msg) {
@@ -749,6 +751,7 @@ window.addEventListener('load', () => {
 
 </body>
 </html>
+
 
 
 
