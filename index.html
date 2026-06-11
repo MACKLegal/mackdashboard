@@ -546,6 +546,19 @@ function saveTokenFromSettings() {
   alert('Token saved.');
 }
 
+
+function proxyFetch(airtableUrl, token) {
+  if (window.location.hostname.includes('netlify')) {
+    const rest = airtableUrl.replace('https://api.airtable.com/v0/', '');
+    const qIdx = rest.indexOf('?');
+    const path = qIdx >= 0 ? rest.substring(0, qIdx) : rest;
+    const qs = qIdx >= 0 ? rest.substring(qIdx + 1) : '';
+    const proxyUrl = '/api/airtable?path=' + encodeURIComponent(path) + (qs ? '&qs=' + encodeURIComponent(qs) : '');
+    return fetch(proxyUrl);
+  }
+  return fetch(airtableUrl, { headers: { Authorization: 'Bearer ' + token } });
+}
+
 function loadProjects() {
   const token = getToken();
   if (!token) {
@@ -555,7 +568,7 @@ function loadProjects() {
   const BASE = 'appvnviHqt155NagF';
   const TABLE = 'tblrNDhaIq78yx3kO';
   const url = `https://api.airtable.com/v0/${BASE}/${TABLE}?pageSize=100&sort[0][field]=Sort+Order&sort[0][direction]=asc`;
-  fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+  proxyFetch(url, token)
     .then(r => r.json())
     .then(data => {
       const records = (data.records || []).map(r => r.fields);
@@ -627,7 +640,7 @@ function fval(record, fieldId) {
 async function fetchJobs(token) {
   const fields = Object.values(F).map(id => 'fields%5B%5D=' + encodeURIComponent(id)).join('&');
   const url = `https://api.airtable.com/v0/${BASE_ID}/${JOBS_TABLE}?${fields}&pageSize=100`;
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  const res = await proxyFetch(url, token);
   if (!res.ok) throw new Error(`Airtable error ${res.status}`);
   const data = await res.json();
   // Airtable REST API returns records[].fields
@@ -752,6 +765,7 @@ window.addEventListener('load', () => {
 
 </body>
 </html>
+
 
 
 
