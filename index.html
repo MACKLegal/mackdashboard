@@ -363,6 +363,8 @@
   .dot-next { background: var(--amber); }
   .dot-future { background: var(--muted); }
   .dot-done { background: var(--border); }
+  .project-card.done .project-name { text-decoration: line-through; opacity: 0.5; }
+  .project-card.done .project-desc { opacity: 0.35; }
 
   .project-info { flex: 1; }
 
@@ -502,13 +504,13 @@
       </div>
       <div class="project-tag tag-next">This Week</div>
     </div>
-    <div class="project-card">
-      <div class="project-status-dot dot-next"></div>
+    <div class="project-card done">
+      <div class="project-status-dot dot-done"></div>
       <div class="project-info">
         <div class="project-name">mackstart Launcher</div>
         <div class="project-desc">One command opens Terminal tabs for all scripts at once</div>
       </div>
-      <div class="project-tag tag-next">This Week</div>
+      <div class="project-tag tag-done">✓ Done</div>
     </div>
     <div class="project-card">
       <div class="project-status-dot dot-next"></div>
@@ -860,4 +862,5 @@ window.addEventListener('load', () => {
 
 </body>
 </html>
+
 
