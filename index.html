@@ -559,7 +559,7 @@ function loadProjects() {
     .then(r => r.json())
     .then(data => {
       const records = (data.records || []).map(r => r.fields);
-      const order = ['Active','Next Up','Operational','Future','Cancelled'];
+      const order = ['Active','Next Up','Operational','Completed','Future','Cancelled'];
       const groups = {};
       order.forEach(s => groups[s] = []);
       records.forEach(r => {
@@ -567,10 +567,10 @@ function loadProjects() {
         const s = (statusVal && typeof statusVal === 'object') ? statusVal.name : (statusVal || 'Future');
         if (groups[s]) groups[s].push(r);
       });
-      const dotClass = { 'Active':'dot-active', 'Next Up':'dot-next', 'Operational':'dot-done', 'Future':'dot-future', 'Cancelled':'dot-future' };
-      const tagClass = { 'Active':'tag-active', 'Next Up':'tag-next', 'Operational':'tag-done', 'Future':'tag-future', 'Cancelled':'tag-future' };
-      const tagLabel = { 'Active':'Active', 'Next Up':'Next Up', 'Operational':'✓ Live', 'Future':'Future', 'Cancelled':'Cancelled' };
-      const sectionLabel = { 'Active':'Active', 'Next Up':'Next Up', 'Operational':'Operational', 'Future':'Future Builds', 'Cancelled':'Cancelled' };
+      const dotClass = { 'Active':'dot-active', 'Next Up':'dot-next', 'Operational':'dot-done', 'Completed':'dot-done', 'Future':'dot-future', 'Cancelled':'dot-future' };
+      const tagClass = { 'Active':'tag-active', 'Next Up':'tag-next', 'Operational':'tag-done', 'Completed':'tag-done', 'Future':'tag-future', 'Cancelled':'tag-future' };
+      const tagLabel = { 'Active':'Active', 'Next Up':'Next Up', 'Operational':'✓ Live', 'Completed':'✓ Done', 'Future':'Future', 'Cancelled':'Cancelled' };
+      const sectionLabel = { 'Active':'Active', 'Next Up':'Next Up', 'Operational':'Operational', 'Completed':'Completed', 'Future':'Future Builds', 'Cancelled':'Cancelled' };
       let html = '';
       order.forEach(status => {
         if (!groups[status] || groups[status].length === 0) return;
@@ -579,7 +579,8 @@ function loadProjects() {
         groups[status].forEach(r => {
           const name = r['Name'] || '';
           const desc = r['Description'] || '';
-          html += `<div class="project-card">
+          const doneClass = status === 'Completed' ? ' done' : '';
+          html += `<div class="project-card${doneClass}">
             <div class="project-status-dot ${dotClass[status]}"></div>
             <div class="project-info">
               <div class="project-name">${name}</div>
@@ -751,6 +752,7 @@ window.addEventListener('load', () => {
 
 </body>
 </html>
+
 
 
 
