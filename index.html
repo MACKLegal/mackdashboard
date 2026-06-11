@@ -559,7 +559,7 @@ function loadProjects() {
     .then(r => r.json())
     .then(data => {
       const records = (data.records || []).map(r => r.fields);
-      const order = ['Active','Next Up','Operational','Completed','Future','Cancelled'];
+      const order = ['Active','Next Up','Operational','Future','Cancelled','Completed'];
       const groups = {};
       order.forEach(s => groups[s] = []);
       records.forEach(r => {
@@ -752,6 +752,7 @@ window.addEventListener('load', () => {
 
 </body>
 </html>
+
 
 
 
