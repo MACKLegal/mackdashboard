@@ -757,6 +757,8 @@ window.addEventListener('load', () => {
   if (saved) {
     const inp = document.getElementById('token-input-settings');
     if (inp) inp.value = saved;
+  }
+  if (hasAccess()) {
     loadDashboard();
   } else {
     document.getElementById('dashboard-content').innerHTML = '';
@@ -767,6 +769,7 @@ window.addEventListener('load', () => {
 
 </body>
 </html>
+
 
 
 
